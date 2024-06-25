@@ -135,28 +135,7 @@ individual_plots <- function(.x){
   plt
 }
 
-site_plots <- map(c("Burnt Lands", "Panmure"), ~{
-  fd_ <- 
-    all_poly |> 
-    filter(contlabel  %in% c(95) & 
-             Location == str_remove(.x, "\\s") &
-             type !="Home Range") 
-  fd_ |> 
-    ggplot() +
-    geom_sf(fill = NA,
-            aes(linetype = type, colour = TagID),
-            linewidth = .8) +
-    ggthemes::theme_map(base_size = 12, base_family = "Roboto Condensed") +
-    labs(linetype = "Detection\nmethod",
-         colour = "Bands", title = .x) +
-    theme(legend.position = 'right') +
-    rcartocolor::scale_colour_carto_d()+ 
-    ggsn::scalebar(st.size = 2,st.dist = 0.04,
-                   border.size = .5,
-                   data = fd_, dist_unit = 'm', 
-                   transform = F,
-                   dist = 100, location = 'bottomleft' ) 
-})
+
 
 
 
