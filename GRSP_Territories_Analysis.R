@@ -14,7 +14,7 @@ library(ggthemes)
 source("R/functions.R")
 
 # Setup ----------------------------
-#### Get triangulated points form telemetry data ####
+## Get triangulated points form telemetry data ####
 GRSP_tri<-read.csv("data/TelemetryPoints.csv") |> 
   as_tibble() |> 
   mutate(dt= ymd_hms(DateTime_, tz = 'America/Toronto'),
@@ -24,7 +24,7 @@ GRSP_tri<-read.csv("data/TelemetryPoints.csv") |>
   mutate(sr = suncalc::getSunlightTimes(data = ., keep = "sunrise", tz = 'America/Toronto')[["sunrise"]],
          t2sr = difftime( dt,sr, units = 'mins'))
 
-# Join location to band and bird IDs
+## Join location to band and bird IDs ----------------------
 gr_tri_loc <- dplyr::select(GRSP_tri, BirdID = BIRD, Location) |> 
   distinct()
 
@@ -35,7 +35,7 @@ band_ids <-read_csv("data/Bird_band_ids.csv") |>
 
 
 
-# Calculate locations based on triangulation
+## Calculate locations based on triangulation ----------------------
 results<- triangulate(GRSP_tri, x = "Longitude", y = "Latitude",
                       bearings = "Bearing", group = "ID")
 
@@ -44,7 +44,7 @@ results<- triangulate(GRSP_tri, x = "Longitude", y = "Latitude",
 
 
 
-# Final layers for locations
+## Final layers for locations ---------------------------------
 TriangulationPoints <- results |> 
   filter(Error == "") |> 
   st_as_sf(coords = c("X_Coordinate", "Y_Coordinate"), crs = 4326) |> 
@@ -82,8 +82,8 @@ names(sites) <- c(sites_s[[1]]$Location[[1]], sites_s[[2]]$Location[[1]]) # Manu
 
 
 
-# Calculate KDE at multiple levels -------------------------
-# Run kde estimation for Triangulation, Visual, and all points by Bird
+# Analyses -------------------------
+## Run kde estimation for Triangulation, Visual, and all points by Bird ----
 res <- gen_kde(TriangulationPoints , strata = BirdID)
 resV <- gen_kde(VisualPoints, strata = BirdID)
 res_home_range <- gen_kde(bind_rows(TriangulationPoints,VisualPoints ) |> 
@@ -96,9 +96,14 @@ res_home_range <- gen_kde(bind_rows(TriangulationPoints,VisualPoints ) |>
 TriangulationPoints_sep <- split(x = TriangulationPoints, f = TriangulationPoints$BirdID, drop = FALSE)
 VisualPoints_sep <- split(x = VisualPoints, f = VisualPoints$BirdID, drop = FALSE)
 
+HR_dat <- bind_rows(TriangulationPoints,VisualPoints ) |> 
+  dplyr::select(BirdID, Location)
+HomeRange_sep <- split(x = HR_dat, f = HR_dat$BirdID, drop = FALSE)
+
 
 jackknife_res_tri <- map(TriangulationPoints_sep, jack_kde)
 jackknife_res_Vis <- map(VisualPoints_sep, jack_kde)
+jackknife_res_HR <- map(HomeRange_sep, jack_kde)
 
 
 
@@ -110,12 +115,16 @@ res95jack_tri <- map(1:length(TriangulationPoints_sep),
 res95jack_vis <- map(1:length(VisualPoints_sep),
                      pull95, list_= jackknife_res_Vis,
                      list_for_names = VisualPoints_sep) |> 
-  list_rbind() |> st_as_sf() |> mutate(type = "Visual")
+  list_rbind() |> st_as_sf() |> mutate(type = "Territory")
 
-
+res95jack_hr <- map(1:length(HomeRange_sep),
+                     pull95, list_= jackknife_res_HR,
+                     list_for_names = HomeRange_sep) |> 
+  list_rbind() |> st_as_sf() |> mutate(type = "Home Range")
 
 mapJack_tri <- map(unique(res95jack_tri$BirdID),fgg, df = res95jack_tri)
 mapJack_vis <- map(unique(res95jack_vis$BirdID),fgg, df = res95jack_vis)
+mapJack_hr <- map(unique(res95jack_hr$BirdID),fgg, df = res95jack_hr)
 
 pdf("output/Jackknife_Visual_plots.pdf")
 mapJack_vis
@@ -123,6 +132,11 @@ dev.off()
 
 pdf("output/Jackknife_Tri_plots.pdf")
 mapJack_tri
+dev.off()
+
+
+pdf("output/Jackknife_HR_plots.pdf")
+mapJack_hr
 dev.off()
 
 
@@ -135,7 +149,7 @@ dev.off()
 
 
 poly_vis <- transpose(resV) |> pluck("sf") |> bind_rows() |> 
-  mutate(type = "Visual")
+  mutate(type = "Territory")
 poly_tri <- transpose(res) |> pluck("sf") |> bind_rows() |> 
   mutate(type = "Triangulation")
 
@@ -147,26 +161,18 @@ all_poly <- bind_rows(
   list(poly_vis, poly_tri, poly_home_range)
 ) |> left_join(band_ids,by = join_by(BirdID))
 
-
+## Calculate area by bird -----------
 comparison_by_bird <- 
   st_drop_geometry(all_poly) |> 
   dplyr::select(contlabel, BirdID,TagID, Area, type) |> 
-  pivot_wider(names_from = type, values_from = Area)
-
-write_csv(comparison_by_bird, "output/Area_comparison_by_bird.csv")
-write_csv(comparison_by_bird |> 
-            filter(contlabel==95),
-          "output/Area_comparison_by_bird_95.csv")
-
-
-write_csv(comparison_by_bird |> 
-            filter(contlabel==95) |> 
-            mutate(across(4:6, ~set_units(.x,"ha"))),
-          "output/Area_comparison_by_bird_95_ha.csv")
+  pivot_wider(names_from = type, values_from = Area) |> 
+  filter(contlabel==95) |> 
+  mutate(across(4:6, ~set_units(.x,"ha")))
 
 
 
-## Plot outlining how Area changes with KDE level
+
+### Plot outlining how Area changes with KDE level -------------
 ggplot(all_poly, aes(as.numeric(as.character(contlabel)),
                      set_units(Area, "ha") , colour = type)) +
   geom_line() + facet_wrap(Location~TagID) +
@@ -178,19 +184,18 @@ ggplot(all_poly, aes(as.numeric(as.character(contlabel)),
 ggsave("output/Change_Area_with_KDE.png", width = 12, height = 12, units = 'in', dpi = 600)
 
 ggplot(all_poly |> 
-         filter(contlabel == 95&
-                  type !="Home Range"),
+         filter(contlabel == 95),
        aes(TagID,set_units(Area, "ha") , colour = type)) +
   
   stat_summary(data = bind_rows(res95jack_tri,
-                                res95jack_vis) |> 
+                                res95jack_vis, res95jack_hr) |> 
                  left_join(band_ids),
                # fun.data = 'mean_cl_boot', 
                fun.min = min,
                fun.max = max,
                geom = "linerange",
-               position = position_dodge(width = 0.5))+
-  geom_point(position = position_dodge(width = 0.5)) +
+               position = position_dodge(width = 0.33))+
+  geom_point(position = position_dodge(width = 0.33)) +
   facet_wrap(~Location, scales = 'free_x') +
   labs(x = "Bird tags", y = "Area with jackknife error",
        colour = "Estimation method") +
@@ -232,7 +237,7 @@ write_csv(
 
   
 
-## Table 1
+## Table 1 ------------
 
 
 Table1 <- 
@@ -247,7 +252,7 @@ Table1 <-
               dplyr::select(BirdID, overlap_ha =area_ha)) |> 
   mutate("KDE overlap %" = overlap_ha/`Home Range`) |> 
   dplyr::select("Study Site" = Location,BirdID,
-                TagID, "Territory KDE (ha)" =Visual,
+                TagID, "Territory KDE (ha)" =Territory,
                 "Territory points" = nVisual,
                 "Telemetry KDE (ha)"= Triangulation,
                 "Telemetry points" = ntri,
@@ -288,85 +293,42 @@ VisualPoints |> st_drop_geometry() |> summarise(n=n(), .by = BirdID) |>
 
 
 
-d_for_stats <- 
-st_drop_geometry(all_poly) |> 
-  filter(contlabel==95) |> 
-  mutate(ha = units::drop_units(units::set_units(Area, "ha"))) |> 
-    left_join(n_obs) |> 
-  dplyr::select(Location, BirdID, type, ha, n)
-  
-wt <- 
-d_for_stats |> 
-  filter((type != "Visual"|n>=10) &
-           (type != "Home Range" | n>=15)
-         & type != "Triangulation") |> 
-wilcox.test(ha~type, data = _, exact=T,correct=T)
-
-## Values from lines
 
 
 
 
 
-# Line 132
-wilcox.test(units::drop_units(Table1_dropped$`Territory KDE (ha)`),
-            units::drop_units(Table1_dropped$`Home Range KDE (ha)`),
-            paired=T,exact=T,correct=T)
-
-# Line 124
-wilcox.test(units::drop_units(Table1_dropped$`Home Range KDE (ha)`)[Table1_dropped$`Study Site`=="BurntLands"],
-            units::drop_units(Table1_dropped$`Home Range KDE (ha)`)[Table1_dropped$`Study Site`=="Panmure"],
-            paired=F,exact=T,correct=T)
-
-
-
-
-write_csv(
+write_csv(Table1
   ,
-  "output/Area_comparison_by_bird_95_ha_with_n.csv")
+  "output/Table1.csv")
 
 
-
-
-
-
-
-
-
-
-
-
-all_poly |>
-  filter(contlabel==95) |> 
-  get_overlap( Location_ = "BILL", byBird = T)
-
-
-
-
-
+## Overlaps ----------------
 
 
 overlapplots <- 
   all_poly |>
   filter(contlabel == 95) |> 
+  mutate(type = str_replace(type, "Territory", "Visual"))  |> 
   dplyr::distinct(Location, type, contlabel) %>% 
   rename_with(~paste0(., "_"), everything()) |> 
   pmap(gen_overlap_plot, df = all_poly) 
 
-(wrap_elements(grid::textGrob("Panmure")) + overlapplots[[1]] + 
+figure3 <- 
+(wrap_elements(grid::textGrob("Panmure", check.overlap = F)) + 
+   overlapplots[[1]] + 
     overlapplots[[3]] +overlapplots[[5]]  + 
-    plot_layout(nrow =1, widths = c( 0.1, 0.3,0.3,0.3))) /
-  (wrap_elements(grid::textGrob("Burnt Lands") )+
+    plot_layout(nrow =1, widths = c( 0.12, 0.3,0.3,0.3))) /
+  (wrap_elements(grid::textGrob("Burnt\nLands", check.overlap = F) )+
      overlapplots[[2]] + overlapplots[[4]] +overlapplots[[6]] + 
-     plot_layout(nrow =1,  widths = c( 0.1, 0.3,0.3,0.3)) )
+     plot_layout(nrow =1,  widths = c( 0.12, 0.3,0.3,0.3)) )
 
-ggsave("output/Overlap_plots.png", width = 12, height = 6, dpi = 600)
+ggsave("output/figure3.png",plot = figure3, width = 2000,
+       height = 1000, units = 'px',
+       dpi = 300)
 
 
 
-overlaps |> 
-  dplyr::select(Location, TagID, contlabel, Area,type, Overlap_area = overlap) |> 
-  filter(contlabel == 95) |> write_csv("output/overlap_by_bird.csv")
 
 overlaps |> 
   dplyr::select(Location, TagID, contlabel, Area,type, Overlap_area = overlap) |> 
@@ -377,7 +339,8 @@ overlaps |>
 
 indiv_plts <- map(unique(band_ids$TagID[-13]), individual_plots)
 
-individual_plots("Green/Orange")
+individual_plots("Black/Orange")
+file.copy("output/Black_Orange_indiv.png", "output/figure2,png", overwrite = T)
 
 site_plots <- map(c("Burnt Lands", "Panmure"), ~{
   fd_ <- 
@@ -412,7 +375,7 @@ comp <-
   left_join(TriangulationPoints |> st_drop_geometry() |> summarise(ntri=n(), .by = BirdID)) |>
   mutate(across(4:6, ~set_units(.x,"ha"))
   ) |> 
-  pivot_longer(names_to = "Type", values_to = "ha", cols = c(Visual, Triangulation, `Home Range`),
+  pivot_longer(names_to = "Type", values_to = "ha", cols = c(Territory, Triangulation, `Home Range`),
                values_transform = units::drop_units) |> 
   left_join(band_ids)
 
@@ -461,23 +424,7 @@ d |> filter(!is.na(Area) & n_%%5==0 ) |>
   geom_vline(data=Table1 , aes(xintercept = `Home Range points`), linetype =2) +
   facet_wrap(~BirdID, scales = 'free')
 
-d |> filter(!is.na(Area)) |> 
-  mutate(across(Area,  ~units::set_units(.x, 'ha'))) |> 
-  ggplot(aes(n_,Area)) +
-  # stat_summary(
-  #   fun.min = function(z) { quantile(z,0.025) },
-  #   fun.max = function(z) { quantile(z,0.975) },
-  #   fun = median,
-  #   geom='ribbon', alpha = 0.4) +
-  stat_summary(
-    fun.data = 'mean_se',
-    geom='ribbon', alpha = 0.4) +
-  stat_summary(fun = 'mean', geom='line') +
-  labs(x = "N observations per bird",
-       y = expression(paste("Mean home range (mean"%+-%"SE)") ))+
-  theme_light() +
-  # geom_hline(yintercept = r$Area) +
-  geom_vline(xintercept = r$n_)
+
 
 r <- 
   tibble(n_ =
@@ -493,6 +440,21 @@ r <-
            mean() |> 
            units::set_units('ha'))
 
+bootstraps_plot <- 
+d |> filter(!is.na(Area)) |> 
+  mutate(across(Area,  ~units::set_units(.x, 'ha'))) |> 
+  ggplot(aes(n_,Area)) +
+  stat_summary(
+    fun.data = 'mean_se',
+    geom='ribbon', alpha = 0.4) +
+  stat_summary(fun = 'mean', geom='line') +
+  labs(x = "N observations per bird",
+       y = expression(paste("Mean home range (mean"%+-%"SE)") ))+
+  ggthemes::theme_clean(base_family = 'arial') +
+  # geom_hline(yintercept = r$Area) +
+  geom_vline(xintercept = r$n_)
+ggsave("output/bootstraps_home_range.png", dpi = 300,units = 'px',
+       width = 800, height = 800, plot = bootstraps_plot)
 
 
 job::job({

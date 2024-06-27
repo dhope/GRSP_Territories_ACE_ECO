@@ -86,7 +86,9 @@ get_overlap <- function(df, Location_, type_=NULL, contlabel_=NULL, byBird=F){
 
 
 gen_overlap_plot <- function(df, Location_, type_, contlabel_){
-  d <- filter(df, Location==Location_, type==type_, contlabel==contlabel_)
+  d <- df |> 
+    mutate(type = str_replace(type, "Territory", "Visual")) |> 
+    filter( Location==Location_, type==type_, contlabel==contlabel_) 
   
   
   
@@ -95,11 +97,13 @@ gen_overlap_plot <- function(df, Location_, type_, contlabel_){
             fill = 'white', colour = "black") + #, aes(colour = TagID)) +
     geom_sf(data =st_intersection(d) |> 
               filter(n.overlaps>1),fill = 'darkgrey')+#aes(fill = n.overlaps)) +
-    ggthemes::theme_map(base_size = 14, base_family = "Roboto Condensed") +
+    ggthemes::theme_map(base_size = 14, base_family = "Arial") +
     scale_colour_viridis_d()+
     labs(colour = "Bird", title = ifelse(Location_=="Panmure", glue::glue(" {type_}"), "")) + #{Location_}:
-    ggsn::scalebar(st.size = 2,st.dist = 0.04,border.size = .5,
-                   data = d, dist_unit = 'm', transform = F, dist = 100, location = 'bottomleft', )
+    ggsn::scalebar(st.size = 2,st.dist = 0.07,border.size = .25,height = .02,
+                   data = d, dist_unit = 'm', transform = F,
+                   dist = ifelse(Location_=="Panmure",
+                                 100, 250), location = 'bottomleft', )
   
 }
 
@@ -107,31 +111,39 @@ gen_overlap_plot <- function(df, Location_, type_, contlabel_){
 individual_plots <- function(.x){
   d_id <- 
     all_poly |> 
+    mutate(type = str_replace(type, "Territory", "Visual")) |> 
     filter(contlabel  %in% c(5, 50, 95) & TagID==.x &
              ((  type == "Home Range" & contlabel == 95) |
                 (type != "Home Range" & contlabel ==95))
-    ) 
+    ) |> mutate(across(type, ~factor(str_replace(.x, "Home Range", "Triangulation and Visual"),
+                                     levels = c("Visual","Triangulation", "Triangulation and Visual"))))
+  
   plt <- 
     d_id |> 
     ggplot() + geom_sf(aes( colour = type),
                        linewidth =1,fill = NA) +
     theme_minimal() +
-    labs(title = .x) +
-    geom_sf(data = VisualPoints |> 
-              st_as_sf() |> 
-              left_join(band_ids, by = "BirdID") |> 
-              filter(TagID == .x)) +
-    geom_sf(data = TriangulationPoints |> 
-              st_as_sf() |>  
-              filter(TagID == .x ), shape =2) +
-    ggthemes::theme_map(base_size = 14, base_family = "Roboto Condensed") +
-    rcartocolor::scale_colour_carto_d("", palette = 4)+
+    # labs(title = .x) +
+    labs(shape = "Observations",
+         colour = "KDE") +
+    geom_sf(data = bind_rows(VisualPoints |> 
+                               st_as_sf() |> 
+                               # left_join(band_ids, by = "BirdID") |> 
+                               filter(TagID == .x) |>
+                               mutate(type = "Visual"),
+                             TriangulationPoints |> 
+                               st_as_sf() |>  
+                               filter(TagID == .x )|> mutate(type = "Triangulation")), aes(shape =type)) +
+    ggthemes::theme_map(base_size = 14, base_family = "Arial") +
+    rcartocolor::scale_colour_carto_d( palette = 4)+
     # labs(colour = "Bird", title = ifelse(Location_=="Panmure", glue::glue(" {type_}"), "")) + #{Location_}:
-    ggsn::scalebar(st.size = 2,st.dist = 0.04,border.size = .5,
+    ggsn::scalebar(st.size = 5,st.dist = 0.04,border.size = .5,
                    data = d_id, dist_unit = 'm', transform = F,
-                   dist = 50, location = 'bottomleft' ) +
+                   dist = 50,
+                   location = 'bottomleft' ) +
     theme(legend.position = 'right')
-  ggsave(glue::glue("output/{str_replace(.x, '/', '_')}_indiv.jpg"), plt)
+  ggsave(glue::glue("output/{str_replace(.x, '/', '_')}_indiv.png"), plt,width = 2000, height = 1500,
+         units = 'px', dpi = 300)
   plt
 }
 

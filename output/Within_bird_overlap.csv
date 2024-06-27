@@ -1,0 +1,37 @@
+BirdID,TagID,Location,comp_lab,area_ha
+BILL,Grey/Red,Panmure,Visual_Triangulation,0
+BILL,Grey/Red,Panmure,Visual_Home Range,0
+BILL,Grey/Red,Panmure,Triangulation_Home Range,0.749500279023417
+CASH,Black/Black,Panmure,Visual_Triangulation,0
+CASH,Black/Black,Panmure,Visual_Home Range,0
+CASH,Black/Black,Panmure,Triangulation_Home Range,0.652473441705108
+FURY,Black/Red,BurntLands,Visual_Triangulation,0
+FURY,Black/Red,BurntLands,Visual_Home Range,0
+FURY,Black/Red,BurntLands,Triangulation_Home Range,2.31126216611061
+GREY,Grey/Grey,BurntLands,Visual_Triangulation,0
+GREY,Grey/Grey,BurntLands,Visual_Home Range,0
+GREY,Grey/Grey,BurntLands,Triangulation_Home Range,1.63899517357994
+GRUE,Blue/Green,BurntLands,Visual_Triangulation,0
+GRUE,Blue/Green,BurntLands,Visual_Home Range,0
+GRUE,Blue/Green,BurntLands,Triangulation_Home Range,3.31708291202728
+JR,Blue/Orange,Panmure,Visual_Triangulation,0
+JR,Blue/Orange,Panmure,Visual_Home Range,0
+JR,Blue/Orange,Panmure,Triangulation_Home Range,0.776084826166159
+LUCKY,Green/Green,Panmure,Visual_Triangulation,0
+LUCKY,Green/Green,Panmure,Visual_Home Range,0
+LUCKY,Green/Green,Panmure,Triangulation_Home Range,1.92295875208601
+RED,Red/Red,BurntLands,Visual_Triangulation,0
+RED,Red/Red,BurntLands,Visual_Home Range,0
+RED,Red/Red,BurntLands,Triangulation_Home Range,3.38502004764518
+SANTA,Green/Red,BurntLands,Visual_Triangulation,0
+SANTA,Green/Red,BurntLands,Visual_Home Range,0
+SANTA,Green/Red,BurntLands,Triangulation_Home Range,2.59110334891981
+SHARK,Orange/Red,Panmure,Visual_Triangulation,0
+SHARK,Orange/Red,Panmure,Visual_Home Range,0
+SHARK,Orange/Red,Panmure,Triangulation_Home Range,0.593877762136166
+SMURF,Blue/Blue,Panmure,Visual_Triangulation,0
+SMURF,Blue/Blue,Panmure,Visual_Home Range,0
+SMURF,Blue/Blue,Panmure,Triangulation_Home Range,1.23263359025387
+TIGER,Black/Orange,BurntLands,Visual_Triangulation,0
+TIGER,Black/Orange,BurntLands,Visual_Home Range,0
+TIGER,Black/Orange,BurntLands,Triangulation_Home Range,5.29265027701459

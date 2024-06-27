@@ -1,0 +1,37 @@
+Location,TagID,contlabel,Area,type,Overlap_area
+Panmure,Grey/Red,95,14379.1562978025,Territory,1133.64957315344
+Panmure,Black/Black,95,6463.47194031042,Territory,1133.64957314398
+Panmure,Blue/Orange,95,5154.7322278769,Territory,4570.81335163122
+Panmure,Green/Green,95,9466.86758305028,Territory,4499.18914803051
+Panmure,Orange/Red,95,7585.76275447273,Territory,1340.06105424459
+Panmure,Blue/Blue,95,8208.84589168313,Territory,0
+BurntLands,Black/Red,95,54740.0309901023,Territory,2297.87210093904
+BurntLands,Grey/Grey,95,14494.0994411733,Territory,2297.87210100624
+BurntLands,Blue/Green,95,9119.49026149628,Territory,0
+BurntLands,Red/Red,95,6214.80443945999,Territory,0
+BurntLands,Green/Red,95,7606.18025683984,Territory,0
+BurntLands,Black/Orange,95,22131.3049111799,Territory,0
+Panmure,Grey/Red,95,7495.00279022323,Triangulation,1504.2639849932
+Panmure,Black/Black,95,8016.13803303303,Triangulation,1504.26398498379
+Panmure,Blue/Orange,95,9333.03892200394,Triangulation,8427.31752294814
+Panmure,Green/Green,95,20563.5993781226,Triangulation,8426.07427435269
+Panmure,Orange/Red,95,7699.53455099883,Triangulation,3716.22836698382
+Panmure,Blue/Blue,95,16928.3233464446,Triangulation,3467.95495777635
+BurntLands,Black/Red,95,23112.621661176,Triangulation,2655.24147515092
+BurntLands,Grey/Grey,95,16389.9517358075,Triangulation,2655.2414751288
+BurntLands,Blue/Green,95,43484.7390223145,Triangulation,688.803944956191
+BurntLands,Red/Red,95,36278.1256703977,Triangulation,0
+BurntLands,Green/Red,95,33535.9752887462,Triangulation,0
+BurntLands,Black/Orange,95,56277.6896729283,Triangulation,688.803944952262
+Panmure,Grey/Red,95,14847.1363017039,Home Range,3647.8949599116
+Panmure,Black/Black,95,8586.0298106831,Home Range,3179.64084313437
+Panmure,Blue/Orange,95,10143.550356106,Home Range,11228.5165020976
+Panmure,Green/Green,95,19959.408736508,Home Range,12386.0609061865
+Panmure,Orange/Red,95,11988.8025257664,Home Range,6481.93562484326
+Panmure,Blue/Blue,95,13685.6836551046,Home Range,1498.83486749048
+BurntLands,Black/Red,95,55860.4679739969,Home Range,7842.77236942505
+BurntLands,Grey/Grey,95,22682.2686995191,Home Range,7842.7723693843
+BurntLands,Blue/Green,95,36465.9616714879,Home Range,0
+BurntLands,Red/Red,95,43267.0900974488,Home Range,3.59407254133839
+BurntLands,Green/Red,95,27764.9168888293,Home Range,0
+BurntLands,Black/Orange,95,57926.5987423083,Home Range,3.59407254180405
