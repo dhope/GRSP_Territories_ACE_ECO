@@ -340,7 +340,7 @@ overlaps |>
 indiv_plts <- map(unique(band_ids$TagID[-13]), individual_plots)
 
 individual_plots("Black/Orange")
-file.copy("output/Black_Orange_indiv.png", "output/figure2,png", overwrite = T)
+file.copy("output/Black_Orange_indiv.png", "output/figure2.png", overwrite = T)
 
 site_plots <- map(c("Burnt Lands", "Panmure"), ~{
   fd_ <- 
