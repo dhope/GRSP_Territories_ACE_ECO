@@ -452,7 +452,7 @@ d |> filter(!is.na(Area)) |>
        y = expression(paste("Mean home range (mean"%+-%"SE)") ))+
   ggthemes::theme_clean(base_family = 'arial') +
   # geom_hline(yintercept = r$Area) +
-  geom_vline(xintercept = r$n_)
+  geom_vline(xintercept = r$n_, linetype =2)
 ggsave("output/bootstraps_home_range.png", dpi = 300,units = 'px',
        width = 800, height = 800, plot = bootstraps_plot)
 
