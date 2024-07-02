@@ -450,7 +450,8 @@ d |> filter(!is.na(Area)) |>
   stat_summary(fun = 'mean', geom='line') +
   labs(x = "N observations per bird",
        y = expression(paste("Mean home range (mean"%+-%"SE)") ))+
-  ggthemes::theme_clean(base_family = 'arial') +
+  # ggthemes::theme_clean(base_family = 'arial') +
+  theme_minimal(base_family = 'arial', base_size = 10) +
   # geom_hline(yintercept = r$Area) +
   geom_vline(xintercept = r$n_, linetype =2)
 ggsave("output/bootstraps_home_range.png", dpi = 300,units = 'px',
