@@ -529,7 +529,7 @@ d_terr |> filter(!is.na(Area)) |>
   stat_summary(fun = 'mean', geom='line') +
   labs(x = "N observations per bird",
        y = expression(paste("Mean territory size (mean"%+-%"SE)") ))+
-  theme_light() +
+  theme_minimal(base_family = 'arial', base_size = 10) +
   # geom_hline(yintercept = r$Area) +
   # geom_vline(xintercept = 10, linetype =2)+
   geom_vline(xintercept = r_terr$n_, linetype =2)
@@ -553,13 +553,13 @@ combined <-
   stat_summary(fun = 'mean', geom='line', aes(colour = type)) +
   labs(x = "N observations per bird",colour = "",
        y = expression(paste("Mean area (mean"%+-%"SE)") ))+
-  theme_light() +
-  rcartocolor::scale_color_carto_d() +
-  geom_vline(xintercept = r_terr$n_, linetype =2) +
-  geom_vline(xintercept = r_terr$n_, linetype =2) +
+  theme_minimal(base_family = 'arial', base_size = 10) +
+  rcartocolor::scale_color_carto_d(palette = 'Geyser') +
+  geom_vline(xintercept = r_terr$n_, linetype =2, colour = "#ca562c") +
+  geom_vline(xintercept = r$n_, linetype =2, colour = "#008080") +
   theme(
-    legend.position = 'inside',
-    legend.position.inside =  c(0.75, 0.2))
+    legend.position = 'inside',legend.background = element_blank(),
+    legend.position.inside =  c(0.75, 0.25))
   
 ggsave("output/bootstraps_combined.png", dpi = 300,units = 'px',
        width = 800, height = 800, plot = combined)
