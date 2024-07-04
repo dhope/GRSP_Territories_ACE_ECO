@@ -514,7 +514,7 @@ r_terr <-
            mean() |> 
            units::set_units('ha'))
   
-
+terr_boots <- 
 d_terr |> filter(!is.na(Area)) |> 
   mutate(across(Area,  ~units::set_units(.x, 'ha'))) |> 
   ggplot(aes(n_,Area)) +
@@ -531,7 +531,35 @@ d_terr |> filter(!is.na(Area)) |>
        y = expression(paste("Mean territory size (mean"%+-%"SE)") ))+
   theme_light() +
   # geom_hline(yintercept = r$Area) +
-  geom_vline(xintercept = 10, linetype =2)+
-  geom_vline(xintercept = r_terr$n_)
+  # geom_vline(xintercept = 10, linetype =2)+
+  geom_vline(xintercept = r_terr$n_, linetype =2)
+
+ggsave("output/bootstraps_territory.png", dpi = 300,units = 'px',
+       width = 800, height = 800, plot = terr_boots)
 
 
+
+
+combined <- 
+  d |> mutate(type = "Home Range") |> 
+  bind_rows(
+    d_terr |> mutate(type = "Territory") 
+        ) |> 
+  mutate(across(Area,  ~units::set_units(.x, 'ha'))) |> 
+  ggplot(aes(n_,Area)) +
+  stat_summary(
+    fun.data = 'mean_se',
+    geom='ribbon', alpha = 0.4, aes(group = type)) +
+  stat_summary(fun = 'mean', geom='line', aes(colour = type)) +
+  labs(x = "N observations per bird",colour = "",
+       y = expression(paste("Mean area (mean"%+-%"SE)") ))+
+  theme_light() +
+  rcartocolor::scale_color_carto_d() +
+  geom_vline(xintercept = r_terr$n_, linetype =2) +
+  geom_vline(xintercept = r_terr$n_, linetype =2) +
+  theme(
+    legend.position = 'inside',
+    legend.position.inside =  c(0.75, 0.2))
+  
+ggsave("output/bootstraps_combined.png", dpi = 300,units = 'px',
+       width = 800, height = 800, plot = combined)
