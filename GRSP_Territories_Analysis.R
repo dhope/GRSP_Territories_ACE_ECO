@@ -504,7 +504,7 @@ r_terr <-
            bind_rows(VisualPoints ) |> 
            st_drop_geometry() |> 
            count(BirdID) |> 
-           filter(n>=10) |> 
+           # filter(n>=10) |> 
            pull(n) |> mean(),
          Area = 
            poly_vis |> 
@@ -512,7 +512,13 @@ r_terr <-
            st_drop_geometry() |> 
            pull(Area) |> 
            mean() |> 
-           units::set_units('ha'))
+           units::set_units('ha'),
+         n_gr10 =
+           bind_rows(VisualPoints ) |> 
+           st_drop_geometry() |> 
+           count(BirdID) |> 
+           filter(n>=10) |>
+           pull(n) |> mean(),)
   
 terr_boots <- 
 d_terr |> filter(!is.na(Area)) |> 
@@ -541,7 +547,7 @@ ggsave("output/bootstraps_territory.png", dpi = 300,units = 'px',
 
 
 combined <- 
-  d |> mutate(type = "Home Range") |> 
+  d |> mutate(type = "Home\nRange") |> 
   bind_rows(
     d_terr |> mutate(type = "Territory") 
         ) |> 
@@ -559,7 +565,56 @@ combined <-
   geom_vline(xintercept = r$n_, linetype =2, colour = "#008080") +
   theme(
     legend.position = 'inside',legend.background = element_blank(),
-    legend.position.inside =  c(0.75, 0.25))
+    legend.position.inside =  c(0.85, 0.25), legend.byrow = T)
   
 ggsave("output/bootstraps_combined.png", dpi = 300,units = 'px',
        width = 800, height = 800, plot = combined)
+
+
+
+
+d |> mutate(type = "Home\nRange") |> 
+  bind_rows(
+    d_terr |> mutate(type = "Territory") 
+  ) |> filter(!is.na(Area)& n_%%5==0) |> 
+  summarise(Area = mean(Area), .by = c(n_,iter, type)) |> 
+  mutate(across(Area,  ~units::set_units(.x, 'ha'))) |> 
+  ggplot(aes(n_,Area, colour = type)) + 
+  ggdist::stat_halfeye(position = position_dodge(width = 1))
+
+
+##  Remove birds not included in analysis --------------------
+
+
+combined_dropped <- 
+  d |> mutate(type = "Home\nRange") |> 
+  bind_rows(
+    d_terr |> mutate(type = "Territory") |> 
+      filter(BirdID %in% Table1_dropped$BirdID[!is.na(
+        Table1_dropped$`Territory KDE (ha)`)])
+  ) |> 
+  mutate(across(Area,  ~units::set_units(.x, 'ha'))) |> 
+  filter(!is.na(Area)) |> 
+  # summarise(Area = mean(Area), .by = c(n_,iter, type)) |> 
+  ggplot(aes(n_,Area)) +
+  stat_summary(
+    fun.data = 'mean_se',
+    geom='ribbon', alpha = 0.4, aes(group = type)) +
+  stat_summary(fun = 'mean', geom='line', aes(colour = type)) +
+  labs(x = "N observations per bird",colour = "",
+       y = expression(paste("Mean area (mean"%+-%"SE)") ))+
+  theme_minimal(base_family = 'arial', base_size = 10) +
+  rcartocolor::scale_color_carto_d(palette = 'Geyser') +
+  geom_vline(xintercept = r_terr$n_gr10, linetype =2, colour = "#ca562c") +
+  geom_vline(xintercept = r$n_, linetype =2, colour = "#008080") +
+  theme(
+    legend.position = 'inside',legend.background = element_blank(),
+    legend.position.inside =  c(0.85, 0.25), legend.byrow = T)
+
+ggsave("output/bootstraps_combined_match_Table1.png", dpi = 300,units = 'px',
+       width = 800, height = 800, plot = combined_dropped)
+
+
+
+
+
